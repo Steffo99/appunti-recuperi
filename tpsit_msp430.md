@@ -6,7 +6,7 @@
 
 In pratica, potete riutilizzare il file dove, come e quando vi pare, ma dovete **inserire il mio nome** nei documenti in cui questo viene usato.
 
-Capito, prof.? Non si copia e non si spaccia per proprio!
+Capito, prof. \_\_\_\_\_\_? Non si usano appunti di altri studenti senza dargli credito!
 
 
 ## _Prerequisito:_ Le maschere
@@ -88,18 +88,23 @@ Ogni porta ha quattro bit associati:
 - `OUT`(put): se la porta è un output, decide cosa mandare fuori da quel bit, se un 0 o un 1.
 - `IN`(put): ha sempre il valore dell'input dell'ingresso desiderato; non può essere modificata.
 - `SEL`(ezione): visto che tutti i pin possono fare due cose diverse, seleziona quale cosa delle due devono fare: funzionano da **Input/Output** (0) oppure usano la **funzione secondaria** (1).
+- `REN`: abilita / disabilita una _resistenza di pullup/down_, **assicurati che sia sempre attiva quando usi qualcosa come input** o potrebbero succedere cose inaspettate!
 
 Per (s)comodità, nel codice C questi bit sono raggruppati in **gruppi di 8**:  
-tutte le porte da P1.0 a P1.7 sono raggruppate nelle variabili `P1DIR`, `P1OUT`, `P1IN` e `P1SEL`; quelle da P2.0 a P2.7 in `P2DIR`, `P2OUT`, etc.
+tutte le porte da P1.0 a P1.7 sono raggruppate nelle variabili `P1DIR`, `P1OUT`, `P1IN`, `P1SEL` e `P1REN`; quelle da P2.0 a P2.7 in `P2DIR`, `P2OUT`, etc.
+
+```c
+//P1.5 è un input
+P1DIR &=~ BIT5;
+//Assicurati che P1REN sia a 1 e P1OUT sia a 0 quando usi un input
+P1OUT &=~ BIT5;
+P1REN |= BIT5;
+```
 
 ```c
 //P1.5 è un output
 P1DIR |= BIT5;
-//P1.5 è un input
-P1DIR &=~ BIT5;
-```
 
-```c
 //Fai uscire un 1 da P1.5
 P1OUT |= BIT5;
 //Fai uscire uno 0 da P1.5
@@ -116,7 +121,7 @@ int nomeFunzione(int parametri) {
 }
 ```
 
-### _Esempio
+### Esempio
 
 ```c
 //Scrivi una funzione di inizializzazione
@@ -163,10 +168,10 @@ int readSwitch() {
 //Creo una variabile globale.
 int statoPrecedente;
 
-//Scrivi una funzione che controlli se lo switch P2.1 ha cambiato valore  
+//Scrivi una funzione che controlli se lo switch P2.1 è appena stato spinto
 int debounce() {
     int statoAttuale = readSwitch();
-    if(statoAttuale != statoPrecedente) {
+    if(statoAttuale != statoPrecedente && statoAttuale) {
         return 1;
     }
     else {
@@ -191,14 +196,99 @@ int toggleLed1() {
 
 ## Usare il timer
 
-Ricordi quando parlavo delle funzioni secondarie? Beh, il timer è una di queste.
+> TL;DR in fondo, guarda quello se hai fretta!
 
-E' utile per ~~fare niente~~ eseguire una certa funzione dopo che è passato un po' di tempo; ad esempio, per fare lampeggiare i led con un intervallo.
+Il timer è una delle funzioni dell'MSP: serve per contare il tempo con una precisione altissima.
 
-Ha un _bazillione_ di opzioni che non vengono usate mai da nessuno principalmente perchè nessuno sa che esistono; qui sotto elenco solo quelle che vengono tipicamente fatte al Fermi.
+Ha millemila impostazioni, ma al Fermi se ne è sempre usata praticamente solo una.
 
-### Contare il tempo
+L'MSP ha due timer che possono funzionare contemporaneamente: si chiamano `TA0` (**TA**imer **0**... Cosa? Non si scrive così timer?) e `TA1` (Well, ci ho provato).
 
-Sembrerà sorprendente, ma la funzione principale del timer è quella di **contare il tempo** passato da un certo momento, all'avanti (tipo un cronometro) o all'indietro (tipo un countdown).
+> Qui sotto parlerò solo di `TA1`, ma `TA0` si configura nello stesso identico modo; basta mettere lo 1 invece che l'1 nel nome della variabile!
 
-Conta il tempo in __microsecondi__ (1 secondo = 1 000 000 microsecondi).
+### Velocità del timer
+
+Il timer dell'MSP può andare a **due velocità**:
+
+- `TASSEL__SMCLK`: 1 MHz = 1 000 000 Hz
+- `TASSEL__ACLK`: 32 KHz = 32 000 Hz
+
+> Sì, quelli sono due underscore. E' fatto così.
+
+Inoltre, queste due velocità possono essere diminuite con l'impostazione `ID`, che divide per un certo numero la frequenza:
+
+- `ID__1`: Mantiene la frequenza uguale. What's even the point?
+- `ID__2`: Divide la frequenza **per due**.
+- `ID__4`: Divide la frequenza **per quattro**. Inizi a vedere un pattern?
+- `ID__8`: Divide la frequenza **PER OTTO**! WOW!
+
+> Ricordati di non confonderti con la versione con un underscore solo, che fa una cosa diversa per qualche motivo...
+
+Combinate, le impostazioni danno questi risultati:
+
+| | `TASSEL__SMCLK` | `TASSEL__ACLK` |
+|-|-----------------|----------------|
+| `ID__1` | 1 000 000 tick/sec | 32 000 tick/sec |
+| `ID__2` | 500 000 tick/sec | 16 000 tick/sec |
+| `ID__4` | 250 000 tick/sec | 8 000 tick/sec |
+| `ID__8` | 125 000 tick/sec | 4 000 tick/sec |
+
+#### Configurare la durata
+
+Per configurare il timer, bisogna mettere il numero di tick per cui si vuole che conti nella variabile `TA1CCR0`.
+
+Come calcolare il numero di tick? Basta fare `numero_secondi * frequenza_timer`, prendendo la frequenza timer dalla tabella sopra!
+
+#### Esempio
+
+Voglio che il timer duri mezzo secondo.
+
+Decido di usare `TASSEL_ACLK` e `ID__8`, perchè è il più facile da usare.
+
+Calcolo il numero di tick: `0.5 secondi * 4000 tick/sec = 2000 tick`.
+
+Allora, scrivo questo:
+
+```c
+TA1CCR0 = 2000;
+```
+
+
+
+
+
+### Tante altre cose inutili
+
+Il timer ha tante, tante, tante altre impostazioni che sono tanto, tanto, tanto inutili.
+
+Queste vanno inserite nella variabile `TA1CTL` (**TA**imer **1** **C**on**T**ro**L**).
+
+```c
+/*
+    clock_scelto: metti TASSEL__ACLK o TASSEL__SMCLK in base a cosa hai scelto di usare prima
+    divisore_scelto: metti ID__1, ID__2, ID__4 o ID__8 in base a cosa hai scelto di usare prima
+    MC__UP: fai in modo che il timer vada avanti (duh)
+    TAIE: attiva/disattiva il timer (TAimer Interrupt Enable)
+    TACLR & ~TAIFG: resetta il timer
+*/
+TA1CTL = clock_scelto | divisore_scelto | MC__UP | TAIE | TACLR & ~TAIFG;
+```
+
+### Funzione da chiamare quando finisce il timer
+
+blah blah blah
+
+### **TL;DR**: Too long, didn't read
+
+Per eseguire una funzione dopo X secondi, scrivi questo.
+
+```c
+void avviaTimer1(float secondi) {
+    TA1CCR0 = (int) (secondi * 4000)
+    TA1CTL = TASSEL__ACLK | ID__8 | TACLR | TAIE | MC__UP & ~TAIFG; 
+}
+
+void __attribute__ ((interrupt(TIMER1_A1_VECTOR))) timer1() {
+    //Codice che vuoi che venga eseguito!
+}
+```
