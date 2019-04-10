@@ -18,7 +18,7 @@ Una maschera è un'operazione che permette di modificare solo _alcuni_ bit di un
 ### Esempi
 
 ```c
-int variabile = 0;
+unsigned int variabile = 0;
 
 //Imposta il secondo bit a 1, senza modificare gli altri 7.
 variabile |= 0b0000 0010;
@@ -36,7 +36,7 @@ variabile &=~ 0b0000 0010;
 In particolare, se si sta modificando codice dell'MSP, è possibile usare le costanti `BITn`:
 
 ```c
-int variabile = 0;
+unsigned int variabile = 0;
 
 //Imposta il secondo bit a 1, senza modificare gli altri 7.
 variabile |= BIT1;
@@ -82,7 +82,7 @@ Le porte sono quei pin/buchi che vedete sull'MSP sulla sinistra e sulla destra.
 
 Hanno un nome che va da **P1.0** a **P1.7** e da **P1.0** a **P5.0**.
 
-Ogni porta ha quattro bit associati:
+Ogni porta ha cinque bit associati:
 
 - `DIR`(ezione): specifica se una particolare porta è un **output** (1) o un **input** (0).
 - `OUT`(put): se la porta è un output, decide cosa mandare fuori da quel bit, se un 0 o un 1.
@@ -96,9 +96,10 @@ tutte le porte da P1.0 a P1.7 sono raggruppate nelle variabili `P1DIR`, `P1OUT`,
 ```c
 //P1.5 è un input
 P1DIR &=~ BIT5;
-//Assicurati che P1REN sia a 1 e P1OUT sia a 0 quando usi un input
-P1OUT &=~ BIT5;
+//Assicurati che P1REN sia a 1, P1OUT sia a 0 e P1SEL sia a 0 quando usi un input!
 P1REN |= BIT5;
+P1SEL &=~ BIT5;
+P1OUT &=~ BIT5;
 ```
 
 ```c
@@ -129,9 +130,14 @@ void initAll() {
     //Ho attaccato un led a P1.0; è quindi un I/O; per la precisione, un output.
     P1SEL &=~ BIT0;
     P1DIR |= BIT0;
+    //Ho attaccato un led a P4.7; è quindi un I/O; per la precisione, un output.
+    P4SEL &=~ BIT7;
+    P4DIR |= BIT7;
     //Ho attaccato un interruttore a P1.1; è quindi un I/O; per la precisione, un input.
-    P1SEL &=~ BIT1;
     P1DIR &=~ BIT1;
+    P1REN |= BIT5;
+    P1SEL &=~ BIT5;
+    P1OUT &=~ BIT5;
 }
 
 //Scrivi una funzione che cambi lo stato del led di P1.0
@@ -172,9 +178,11 @@ int statoPrecedente;
 int debounce() {
     int statoAttuale = readSwitch();
     if(statoAttuale != statoPrecedente && statoAttuale) {
+        statoPrecedente = statoAttuale;
         return 1;
     }
     else {
+        statoPrecedente = statoAttuale;
         return 0;
     }
 }
