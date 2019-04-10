@@ -276,7 +276,19 @@ TA1CTL = clock_scelto | divisore_scelto | MC__UP | TAIE | TACLR & ~TAIFG;
 
 ### Funzione da chiamare quando finisce il timer
 
-blah blah blah
+Per marcare una funzione come "quella da chiamare quando finisce il timer", bisogna aggiungere `__attribute__ (( interrupt(TIMER1_A1_VECTOR) ))` dopo `void`, ma prima del nome della funzione.
+
+> Anche qui sì, sono due parentesi tonde.
+
+Tutto il resto del codice verrà _interrotto_ mentre questa funzione è in esecuzione, e questa potrebbe essere chiamata mentre un'altra è a metà.
+
+#### Esempio
+
+```c
+void __attribute__ (( interrupt(TIMER1_A1_VECTOR) )) timer1() {
+    //Fai cose!
+}
+```
 
 ### **TL;DR**: Too long, didn't read
 
