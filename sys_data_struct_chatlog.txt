@@ -1,0 +1,64 @@
+Stefano Pigozzi, [15.04.19 19:32]
+allora
+
+Stefano Pigozzi, [15.04.19 19:33]
+in python non ci sono gli array
+
+Stefano Pigozzi, [15.04.19 19:34]
+esistono però due tipi che ci assomigliano
+
+Stefano Pigozzi, [15.04.19 19:34]
+le tuple e le liste
+
+Stefano Pigozzi, [15.04.19 19:35]
+le list sono quelle che crei con le parentesi quadre
+tipo
+membri_ryg = ["Steffo", "Sensei", "Fedececco", ...]
+
+Stefano Pigozzi, [15.04.19 19:36]
+e si dice che sono mutabili, perchè una volta che le ho create posso modificarle
+se la cate si unisce alla ryg, posso fare
+membri_ryg.append("Pesca")
+
+Stefano Pigozzi, [15.04.19 19:37]
+le tuple le crei con le parentesi tonde
+tipo
+best_dota_players = ("Steffo", "Sensei", "Adry")
+
+Stefano Pigozzi, [15.04.19 19:38]
+e sono invece immutabili; una volta che le hai create non possono essere cambiate, solo sovrascritte
+best_dota_players.append("Fedececco")  # Errore
+
+best_dota_players = ("Steffo",)  # best_dota_players è stato eliminato e sovrascritto dalla nuova tupla
+
+Stefano Pigozzi, [15.04.19 19:39]
+cos'hanno di comodo le tuple?
+puoi spacchettarle
+(cioè, in realtà anche le liste, ma è meno usato)
+
+Stefano Pigozzi, [15.04.19 19:40]
+best_dota_players = ("Steffo", "Sensei", "Adry")
+player_a, player_b, player_c = best_dota_players
+print(player_a)  # "Steffo"
+
+Stefano Pigozzi, [15.04.19 19:43]
+ci sono i dict, che abbinano gli oggetti
+username_telegram = {"mio": "@Steffo", "max": "@MaxSensei", "balu": "@GoodBalu"}
+print(username_telegram["mio"])  # @Steffo
+
+Stefano Pigozzi, [15.04.19 19:46]
+e i set, che rappresentano insiemi
+giocatori_di_dota = {"Steffo", "Max", "Adry"}
+giocatori_di_lol = {"Paltri", "Steffo", "Spaggia"}
+
+giocatori_di_entrambi = giocatori_di_dota.intersect(giocatori_di_lol)
+print(giocatori_di_entrambi)   # Steffo
+
+Stefano Pigozzi, [15.04.19 19:47]
+giocatori = { 
+  "dota": {"Steffo", "Max"}
+  "lol": {"Steffo", "Spaggia"}
+}
+
+Stefano Pigozzi, [15.04.19 19:47]
+dict di set
