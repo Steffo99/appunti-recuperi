@@ -10,19 +10,20 @@ server = socket.socket()
 indirizzo_locale = ('127.0.0.1', 9999)
 #   Associa il socket all'indirizzo
 server.bind(indirizzo_locale)
-#   Inizia ad accettare connessioni; massimo 5 contemporaneamente
-server.listen(5)
+#   Inizia ad accettare connessioni; massimo 1 contemporaneamente, 
+#   visto che questo il codice ne può gestire una sola alla volta
+server.listen(1)
 
 # Ciclo principale del server
 while True:
     # Aspetta che si connetta qualcuno;
     # quando si connette, metti il suo oggetto socket corrispondente nella variabile client
     # e il suo indirizzo nella variabile indirizzo_remoto (è una tupla, come indirizzo locale!)
-    client, indirizzo_remoto = s.accept()
+    client, indirizzo_remoto = server.accept()
     print("Connection from: " + str(indirizzo_remoto))
     # Aspetta che quel qualcuno ti invii dei dati;
     # Quando li ricevi, mettili nella variabile data (attenzione, è del tipo bytes!)
-    data = sock.recv(1024)
+    data = client.recv(1024)
     # Se ricevi una riga vuota, ignorala
     if not data:
         continue
